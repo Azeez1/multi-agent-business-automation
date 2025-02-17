@@ -1,40 +1,71 @@
 import os
 import sys
-import pinecone
 from langchain_community.llms import OpenAI
-from langchain.vectorstores import Pinecone
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.document_loaders import TextLoader
+from langchain_community.vectorstores import Pinecone
+from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_community.document_loaders import TextLoader
 from langchain.text_splitter import CharacterTextSplitter
+from pinecone_setup import pinecone_index  # Import Pinecone setup
 
 # Retrieve API Keys
 OPENAI_API_KEY = os.environ.get('OPENAI_APIKEY')
 PINECONE_API_KEY = os.environ.get('PINECONE_API_KEY')
-PINECONE_ENV = os.environ.get('PINECONE_ENV')  # Example: "us-west1-gcp"
-INDEX_NAME = "customer-support"  # Pinecone index name
+PINECONE_ENV = os.environ.get('PINECONE_ENV')
+INDEX_NAME = "customer-support"
+
+# ✅ API Key Debugging
+print("🔑 Checking API Keys...")
+if OPENAI_API_KEY:
+    print(
+        "✅ OpenAI API Key: ✔️ Loaded Successfully (Not Displayed for Security)"
+    )
+else:
+    print(
+        "❌ ERROR: OpenAI API Key is MISSING! Set it in environment variables.")
+
+if PINECONE_API_KEY:
+    print("✅ Pinecone API Key: ✔️ Loaded Successfully")
+else:
+    print(
+        "❌ ERROR: Pinecone API Key is MISSING! Set it in environment variables."
+    )
+
+if PINECONE_ENV:
+    print(f"✅ Pinecone Environment: {PINECONE_ENV}")
+else:
+    print(
+        "❌ ERROR: Pinecone Environment is MISSING! Set it in environment variables."
+    )
+
+sys.stdout.flush()
 
 
-
-# Correctly initialize Pinecone
-
-pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENV)
-
-# Ensure the index exists
-if INDEX_NAME not in pinecone.list_indexes():
-    pinecone.create_index(INDEX_NAME,
-                          dimension=1536)  # OpenAI's embedding size
-
-# Connect to Pinecone index
-pinecone_index = pinecone.Index(INDEX_NAME)
-
-
-# Load Vector Database with FAQs
 def initialize_vector_db():
     """Load or create a vector database for FAQ retrieval using Pinecone."""
     try:
-        # Load FAQ documents
-        loader = TextLoader("faq_data.txt")  # Ensure this file exists
+        print("🔍 Initializing vector database...")
+        sys.stdout.flush()
+
+        # Check if FAQ file exists
+        if not os.path.exists("faq_data.txt"):
+            print(
+                "❌ ERROR: faq_data.txt file is missing! Please create one with sample FAQs."
+            )
+            sys.stdout.flush()
+            return None
+
+        loader = TextLoader("faq_data.txt")
         documents = loader.load()
+
+        if not documents:
+            print(
+                "❌ ERROR: faq_data.txt is empty! Please add FAQs for retrieval."
+            )
+            sys.stdout.flush()
+            return None
+
+        print("✅ FAQ data loaded successfully.")
+        sys.stdout.flush()
 
         # Split text into smaller chunks
         text_splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=50)
@@ -47,6 +78,9 @@ def initialize_vector_db():
         vectorstore = Pinecone.from_documents(docs,
                                               embeddings,
                                               index_name=INDEX_NAME)
+        print("✅ Vector database initialized successfully.")
+        sys.stdout.flush()
+
         return vectorstore
     except Exception as e:
         print(f"❌ ERROR: Failed to initialize Pinecone vector DB - {e}")
@@ -56,6 +90,11 @@ def initialize_vector_db():
 
 # Load Pinecone Vector DB
 vector_db = initialize_vector_db()
+
+# ✅ Pinecone Check
+if not vector_db:
+    print("❌ ERROR: Pinecone vector database is not initialized!")
+    sys.stdout.flush()
 
 
 def run_customer_support(query: str) -> str:
@@ -68,13 +107,25 @@ def run_customer_support(query: str) -> str:
 
     try:
         # Initialize OpenAI LLM
-        llm = OpenAI(temperature=0, openai_api_key=OPENAI_APIKEY)
+        print("🔄 Initializing OpenAI LLM...")
+        sys.stdout.flush()
+        llm = OpenAI(temperature=0, openai_api_key=OPENAI_API_KEY)
+        print("✅ OpenAI LLM initialized successfully.")
+        sys.stdout.flush()
 
         # Use Pinecone for FAQ retrieval if available
         if vector_db:
             results = vector_db.similarity_search(query, k=3)
-            context = "\n".join([doc.page_content for doc in results])
-            query = f"Based on the following FAQs, answer concisely:\n\n{context}\n\nUser Query: {query}"
+            if results:
+                context = "\n".join([doc.page_content for doc in results])
+                query = f"Based on the following FAQs, answer concisely:\n\n{context}\n\nUser Query: {query}"
+                print("✅ Pinecone retrieved relevant FAQ context.")
+            else:
+                print("⚠️ No relevant FAQs found in Pinecone.")
+                query = f"User Query: {query}"
+        else:
+            print("❌ ERROR: Pinecone vector database is not available.")
+            query = f"User Query: {query}"
 
         # Generate response
         response = llm.invoke(query)
@@ -87,3 +138,9 @@ def run_customer_support(query: str) -> str:
         print(f"❌ ERROR: {str(e)}")
         sys.stdout.flush()
         return "⚠️ An error occurred while processing your request. Please try again."
+
+
+if __name__ == "__main__":
+    test_query = "Where is my order?"
+    response = run_customer_support(test_query)
+    print(f"🤖 Bot Response: {response}")
