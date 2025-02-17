@@ -1,5 +1,5 @@
 import os
-from langchain.llms import OpenAI
+from langchain_community.llms import OpenAI
 from langchain.agents import initialize_agent, AgentType
 
 # Retrieve the API key from Replit Secrets
