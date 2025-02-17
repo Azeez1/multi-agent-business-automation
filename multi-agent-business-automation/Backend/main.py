@@ -2,8 +2,11 @@ from fastapi import FastAPI
 import uvicorn
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from Agents.customer_support import run_customer_support
+
 
 app = FastAPI()
 
