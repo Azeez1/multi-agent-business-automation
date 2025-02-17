@@ -16,7 +16,7 @@ if INDEX_NAME not in pc.list_indexes().names():
         name=INDEX_NAME,
         dimension=1536,  # OpenAI's embedding size
         metric="cosine",
-        spec=ServerlessSpec(cloud="aws", region="us-west-2"))
+        spec=ServerlessSpec(cloud="aws", region="us-east-1"))
 
 # Connect to Pinecone index
 pinecone_index = pc.Index(INDEX_NAME)
