@@ -17,7 +17,7 @@ INDEX_NAME = "customer-support"  # Pinecone index name
 
 # Correctly initialize Pinecone
 
-pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENV)pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENV)econe.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENV)
+pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENV)
 
 # Ensure the index exists
 if INDEX_NAME not in pinecone.list_indexes():
