@@ -1,18 +1,20 @@
 from fastapi import FastAPI, Query
-import uvicorn
 import sys
 import os
+import uvicorn
 
+# Ensure the parent directory is in the Python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from Agents.customer_support import run_customer_support
-
 
 app = FastAPI()
 
 
 @app.get("/")
 def read_root():
+  print("✅ FastAPI is running!")
+  sys.stdout.flush()
   return {"message": "Multi-Agent Business Automation System is running."}
 
 
@@ -21,9 +23,16 @@ def customer_support(q: str = Query("Hello, I need help!",
                                     description="User query")):
   """
     API endpoint for the Customer Support Agent.
-    Example: /customer-support?q=I have a problem with my order
     """
+  print(f"🔍 FastAPI Received Query: {q}")  # Debugging: Confirm API call
+  sys.stdout.flush()
+
   response = run_customer_support(q)
+
+  print(
+      f"📨 Returning API Response: {response}")  # Debugging: Check final output
+  sys.stdout.flush()
+
   return {"response": response}
 
 
