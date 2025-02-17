@@ -61,6 +61,7 @@ def run_customer_support(query: str) -> str:
         sys.stdout.flush()
         return "⚠️ An error occurred while processing your request. Please try again."
 
+
 if __name__ == "__main__":
     test_query = "Where is my order?"
     response = run_customer_support(test_query)
