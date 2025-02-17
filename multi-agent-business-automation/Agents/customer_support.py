@@ -1,6 +1,6 @@
 import os
 import sys
-from pinecone import Pinecone
+import pinecone
 from langchain_community.llms import OpenAI
 from langchain.vectorstores import Pinecone
 from langchain.embeddings.openai import OpenAIEmbeddings
@@ -13,8 +13,7 @@ PINECONE_API_KEY = os.environ.get('PINECONE_API_KEY')
 PINECONE_ENV = os.environ.get('PINECONE_ENV')  # Example: "us-west1-gcp"
 INDEX_NAME = "customer-support"  # Pinecone index name
 
-# Initialize Pinecone
-import pinecone  # Make sure the pinecone module itself is imported
+
 
 # Correctly initialize Pinecone
 
